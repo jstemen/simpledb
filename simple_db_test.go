@@ -29,8 +29,7 @@ var _ = Describe("Transaction", func() {
 		It("Should return nil if child transaction has been unset", func() {
 			pTrans.Set("foo", "bar")
 			cTrans.Unset("foo")
-			var nilS *string
-			Expect(cTrans.Get("foo")).To(Equal(nilS))
+			Expect(cTrans.Get("foo")).To(BeNil())
 		})
 	})
 	Describe("NumEqualTo", func() {
@@ -64,6 +63,25 @@ var _ = Describe("Transaction", func() {
 			cTrans.Set("foo", "mountain")
 			cTrans.Commit()
 			Expect(*pTrans.Get("foo")).To(Equal("mountain"))
+		})
+
+		It("should return true when the transaction is nested", func() {
+			Expect(cTrans.Commit()).To(Equal(true))
+		})
+
+		It("should return false when the transaction is not nested", func() {
+			Expect(pTrans.Commit()).To(Equal(false))
+		})
+
+	})
+
+	Describe("Rollback", func() {
+		It("should return parent when there is one", func() {
+			Expect(cTrans.Rollback()).To(Equal(pTrans))
+		})
+
+		It("should return nil when there is no parent", func() {
+			Expect(pTrans.Rollback()).To(BeNil())
 		})
 
 	})
