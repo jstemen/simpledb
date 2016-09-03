@@ -1,100 +1,127 @@
 package simple_db
 
 type Transaction struct {
-	StorMap  map[string]*string
-	InverMap map[string]map[string]bool
-	Child    *Transaction
-	Parent   *Transaction
+	storMap map[string]*string
+	inverMap map[string]map[string]bool
+	child *Transaction
+	parent *Transaction
 }
-
+/**
+Initializes a transaction
+ */
 func NewTransaction() *Transaction {
 	t := new(Transaction)
-	t.InverMap = make(map[string]map[string]bool)
-	t.StorMap = make(map[string]*string)
+	t.inverMap = make(map[string]map[string]bool)
+	t.storMap = make(map[string]*string)
 	return t
 }
 
+/**
+Spawns a child transaction
+ */
 func (t *Transaction) New() (*Transaction) {
 	c := NewTransaction()
-	c.Parent = t
-	t.Child = c
+	c.parent = t
+	t.child = c
 	return c
 }
 
+/**
+Sets value in transaction
+name - name key to set
+val - value of key to set
+ */
 func (t *Transaction) Set(name string, val string) {
 	//remove old reference in InverMap
-	oldVal, ok := t.StorMap[name]
+	oldVal, ok := t.storMap[name]
 	if ok {
-		keyMap, ok := t.InverMap[*oldVal]
-		if ok{
-			delete(keyMap,name)
+		keyMap, ok := t.inverMap[*oldVal]
+		if ok {
+			delete(keyMap, name)
 		}
 	}
 
 	//store new
-	t.StorMap[name] = &val
-	keyMap, ok := t.InverMap[val]
+	t.storMap[name] = &val
+	keyMap, ok := t.inverMap[val]
 	if ok {
 		keyMap[name] = true
 	}else {
 		keyMap = make(map[string]bool)
 		keyMap[name] = true
-		t.InverMap[val] = keyMap
+		t.inverMap[val] = keyMap
 	}
 }
 
-func (t *Transaction) Rollback() (parent *Transaction, res bool) {
-	if t.Parent != nil {
-		parent = t.Parent
-		res = true
-		parent.Child = nil
-		t.Parent = nil
+/**
+Discards one transaction, and returns parent transaction
+parent - parent transaction
+ok - true if we are in a transaction
+ */
+func (t *Transaction) Rollback() (parent *Transaction, ok bool) {
+	if t.parent != nil {
+		parent = t.parent
+		ok = true
+		parent.child = nil
+		t.parent = nil
 	}
 	return
 }
 
 /**
-	Returns true if it committed, or false if no transactions are active
+Commits changes to parent transactions
+commitedTrans - The resulting transaction that hold the committed state
+ok - True if we are in a nested transaction / we actually had to do stuff
  */
-func (t *Transaction) Commit() (newTrans *Transaction, res bool) {
-	if t.Parent == nil {
-		res = false
+func (t *Transaction) Commit() (commitedTrans *Transaction, ok bool) {
+	if t.parent == nil {
+		ok = false
 	}else {
 		t.iterateUp(func(parent *Transaction, tran *Transaction) {
 			if parent == nil {
 				return
 			}
-			for k, v := range tran.StorMap {
+			for k, v := range tran.storMap {
 				parent.Set(k, *v)
 			}
-			parent.Child = nil
-			newTrans = parent
+			parent.child = nil
+			commitedTrans = parent
 		})
-		res = true
+		ok = true
 	}
 	return
 }
 
+/**
+Unsets value in transaction
+name - key that should be unset
+ */
 func (t *Transaction) Unset(name string) {
-	t.StorMap[name] = nil
+	t.storMap[name] = nil
 }
 
+/**
+Helper method that walks up the iteration tree
+ */
 func (t *Transaction) iterateUp(myfun func(*Transaction, *Transaction)) {
-	parent := t.Parent
+	parent := t.parent
 	tran := t
 	for tran != nil {
 		myfun(parent, tran)
 		tran = parent
 		if tran != nil {
-			parent = tran.Parent
+			parent = tran.parent
 		}
 	}
 }
 
+/**
+Counts number of keys that are set to specified value in both immediate and accessor transactions
+ */
 func (t *Transaction) NumEqualTo(name string) (count int) {
 	acc := make(map[string]bool)
 	t.iterateUp(func(_, tran *Transaction) {
-		keyMap, ok := tran.InverMap[name]
+		keyMap, ok := tran.inverMap[name]
 		if ok {
 			for a, _ := range keyMap {
 				acc[a] = true
@@ -105,12 +132,14 @@ func (t *Transaction) NumEqualTo(name string) (count int) {
 	count = len(acc)
 	return
 }
-
+/**
+Receives key value
+ */
 func (t *Transaction) Get(name string) (*string) {
-	v, ok := t.StorMap[name]
-	if ok || t.Parent == nil {
+	v, ok := t.storMap[name]
+	if ok || t.parent == nil {
 		return v
 	}else {
-		return t.Parent.Get(name)
+		return t.parent.Get(name)
 	}
 }

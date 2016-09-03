@@ -103,8 +103,8 @@ var _ = Describe("Transaction", func() {
 
 		It("should disconnect the parent from the child", func() {
 			cTrans.Rollback()
-			Expect(pTrans.Child).To(BeNil())
-			Expect(cTrans.Parent).To(BeNil())
+			Expect(pTrans.child).To(BeNil())
+			Expect(cTrans.parent).To(BeNil())
 		})
 
 	})
