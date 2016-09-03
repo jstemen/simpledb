@@ -7,17 +7,17 @@ import (
 	"strings"
 )
 
-func Repl(in io.Reader, out io.Writer) {
+func Repl(in io.Reader, out io.Writer) (err error) {
 	reader := bufio.NewReader(in)
-	text, err := reader.ReadString('\n')
+	var text string
+	text, err = reader.ReadString('\n')
 	if err != nil {
-		panic(err)
+		return
 	}
 	splits := parse(text)
 	trans := NewTransaction()
 	for len(splits) != 0 && splits[0] != "END" {
 		cmd := splits[0]
-		//fmt.Println(fmt.Sprintf("spits is %#v", splits))
 		fmt.Fprintf(out, text)
 		switch cmd {
 		case "SET":

@@ -10,5 +10,8 @@ import (
 )
 
 func main() {
-	Repl(os.Stdin, os.Stdout)
+	err := simple_db.Repl(os.Stdin, os.Stdout)
+	if err != nil{
+		panic(err)
+	}
 }
