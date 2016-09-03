@@ -35,19 +35,25 @@ func Repl(in io.Reader, out io.Writer) {
 			trans.Unset(splits[1])
 		case "NUMEQUALTO":
 			c := trans.NumEqualTo(splits[1])
-			fmt.Fprintln(out, fmt.Sprintf("> %d",c))
+			fmt.Fprintln(out, fmt.Sprintf("> %d", c))
 		case "COMMIT":
 			t, ok := trans.Commit()
 			if ok {
 				trans = t
+			}else {
+				fmt.Fprintln(out, "> NO TRANSACTION")
 			}
 		case "ROLLBACK":
 			t, ok := trans.Rollback()
 			if ok {
 				trans = t
+			}else {
+				fmt.Fprintln(out, "> NO TRANSACTION")
 			}
+		case "BEGIN":
+			trans = trans.New()
 		default:
-			fmt.Fprintln(out, fmt.Sprintf("%s is not an valid command",cmd))
+			fmt.Fprintln(out, fmt.Sprintf("%s is not an valid command", cmd))
 		}
 		text, err = reader.ReadString('\n')
 		splits = parse(text)
