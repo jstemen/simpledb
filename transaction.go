@@ -34,9 +34,10 @@ func (t *Transaction) Set(name string, val string) {
 	t.InverMap[val] = slice
 }
 
-func (t *Transaction) Rollback() (parent *Transaction) {
+func (t *Transaction) Rollback() (parent *Transaction, res bool) {
 	if t.Parent != nil {
 		parent = t.Parent
+		res = true
 		parent.Child = nil
 		t.Parent = nil
 	}
@@ -46,7 +47,7 @@ func (t *Transaction) Rollback() (parent *Transaction) {
 /**
 	Returns true if it committed, or false if no transactions are active
  */
-func (t *Transaction) Commit() (res bool) {
+func (t *Transaction) Commit() (newTrans *Transaction, res bool) {
 	if t.Parent == nil {
 		res = false
 	}else {
@@ -57,6 +58,8 @@ func (t *Transaction) Commit() (res bool) {
 			for k, v := range tran.StorMap {
 				parent.Set(k, *v)
 			}
+			parent.Child = nil
+			newTrans = parent
 		})
 		res = true
 	}

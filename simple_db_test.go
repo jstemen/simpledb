@@ -66,22 +66,32 @@ var _ = Describe("Transaction", func() {
 		})
 
 		It("should return true when the transaction is nested", func() {
-			Expect(cTrans.Commit()).To(Equal(true))
+			_, ok := cTrans.Commit()
+			Expect(ok).To(Equal(true))
 		})
 
 		It("should return false when the transaction is not nested", func() {
-			Expect(pTrans.Commit()).To(Equal(false))
+			_, ok := pTrans.Commit()
+			Expect(ok).To(Equal(false))
+		})
+
+		It("should return new transaction when transaction is nested", func() {
+			trans, _ := cTrans.Commit()
+			Expect(trans).To(Equal(pTrans))
 		})
 
 	})
 
 	Describe("Rollback", func() {
 		It("should return parent when there is one", func() {
-			Expect(cTrans.Rollback()).To(Equal(pTrans))
+			t, ok := cTrans.Rollback()
+			Expect(t).To(Equal(pTrans))
+			Expect(ok).To(Equal(true))
 		})
-
 		It("should return nil when there is no parent", func() {
-			Expect(pTrans.Rollback()).To(BeNil())
+			t, ok := pTrans.Rollback()
+			Expect(t).To(BeNil())
+			Expect(ok).To(Equal(false))
 		})
 
 		It("should disconnect the parent from the child", func() {
