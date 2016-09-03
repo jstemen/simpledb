@@ -54,6 +54,13 @@ var _ = Describe("Transaction", func() {
 			cTrans.Set("there", v)
 			Expect(cTrans.NumEqualTo(v)).To(Equal(3))
 		})
+		It("should handle updates", func() {
+			v := "waldo"
+			pTrans.Set("foo", v)
+			pTrans.Set("here", v)
+			pTrans.Set("foo", "bob")
+			Expect(pTrans.NumEqualTo(v)).To(Equal(1))
+		})
 
 	})
 
