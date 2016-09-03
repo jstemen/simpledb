@@ -58,4 +58,14 @@ var _ = Describe("Transaction", func() {
 
 	})
 
+	Describe("Commit", func() {
+		It("should write child values over parent values", func() {
+			pTrans.Set("foo", "lake")
+			cTrans.Set("foo", "mountain")
+			cTrans.Commit()
+			Expect(*pTrans.Get("foo")).To(Equal("mountain"))
+		})
+
+	})
+
 })

@@ -3,7 +3,7 @@ package simple_db
 type Transaction struct {
 	StorMap  map[string]*string
 	InverMap map[string][]string
-	Child *Transaction
+	Child    *Transaction
 	Parent   *Transaction
 }
 
@@ -33,27 +33,52 @@ func (t *Transaction) Set(name string, val string) {
 	}
 	t.InverMap[val] = slice
 }
+/**
+	Returns true if it committed, or false if no transactions are active
+ */
+func (t *Transaction) Commit() (res bool) {
+	if t.Parent == nil {
+		res = false
+	}else {
+		t.iterateUp(func(parent *Transaction, tran *Transaction) {
+			if parent == nil{
+				return
+			}
+			for k, v := range tran.StorMap {
+				parent.Set(k,*v)
+			}
+		})
+		res = true
+	}
+	return
+}
 
 func (t *Transaction) Unset(name string) {
 	t.StorMap[name] = nil
 }
 
-func (t *Transaction) NumEqualTo(name string) (count int) {
+func (t *Transaction) iterateUp(myfun func(*Transaction, *Transaction)) {
 	parent := t.Parent
 	tran := t
-	acc := make(map[string]bool)
 	for tran != nil {
+		myfun(parent, tran)
+		tran = parent
+		if tran != nil {
+			parent = tran.Parent
+		}
+	}
+}
+
+func (t *Transaction) NumEqualTo(name string) (count int) {
+	acc := make(map[string]bool)
+	t.iterateUp(func(_, tran *Transaction) {
 		sli, ok := tran.InverMap[name]
 		if ok {
 			for _, e := range sli {
 				acc[e] = true
 			}
 		}
-		tran = parent
-		if tran != nil {
-			parent = tran.Parent
-		}
-	}
+	})
 
 	count = len(acc)
 	return
