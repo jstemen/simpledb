@@ -3,7 +3,7 @@ package simple_db
 type Transaction struct {
 	StorMap  map[string]*string
 	InverMap map[string][]string
-	Children []*Transaction
+	Child *Transaction
 	Parent   *Transaction
 }
 
@@ -11,14 +11,13 @@ func NewTransaction() *Transaction {
 	t := new(Transaction)
 	t.InverMap = make(map[string][]string)
 	t.StorMap = make(map[string]*string)
-	t.Children = make([]*Transaction, 0)
 	return t
 }
 
 func (t *Transaction) New() (*Transaction) {
 	c := NewTransaction()
 	c.Parent = t
-	t.Children = append(t.Children, c)
+	t.Child = c
 	return c
 }
 
