@@ -59,6 +59,7 @@ func Repl(in io.Reader, out io.Writer) (err error) {
 		splits = parse(text)
 	}
 	fmt.Fprint(out, text)
+	return
 }
 
 func parse(text string) (splits []string) {

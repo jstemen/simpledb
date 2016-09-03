@@ -1,10 +1,10 @@
 package simple_db
 
 type Transaction struct {
-	storMap map[string]*string
+	storMap  map[string]*string
 	inverMap map[string]map[string]bool
-	child *Transaction
-	parent *Transaction
+	child    *Transaction
+	parent   *Transaction
 }
 /**
 Initializes a transaction
@@ -33,13 +33,7 @@ val - value of key to set
  */
 func (t *Transaction) Set(name string, val string) {
 	//remove old reference in InverMap
-	oldVal, ok := t.storMap[name]
-	if ok {
-		keyMap, ok := t.inverMap[*oldVal]
-		if ok {
-			delete(keyMap, name)
-		}
-	}
+	t.Unset(name)
 
 	//store new
 	t.storMap[name] = &val
@@ -97,6 +91,13 @@ Unsets value in transaction
 name - key that should be unset
  */
 func (t *Transaction) Unset(name string) {
+	oldVal, ok := t.storMap[name]
+	if ok {
+		keyMap, ok := t.inverMap[*oldVal]
+		if ok {
+			delete(keyMap, name)
+		}
+	}
 	t.storMap[name] = nil
 }
 
@@ -118,13 +119,17 @@ func (t *Transaction) iterateUp(myfun func(*Transaction, *Transaction)) {
 /**
 Counts number of keys that are set to specified value in both immediate and accessor transactions
  */
-func (t *Transaction) NumEqualTo(name string) (count int) {
+func (t *Transaction) NumEqualTo(targetVal string) (count int) {
 	acc := make(map[string]bool)
 	t.iterateUp(func(_, tran *Transaction) {
-		keyMap, ok := tran.inverMap[name]
+		keyMap, ok := tran.inverMap[targetVal]
 		if ok {
-			for a, _ := range keyMap {
-				acc[a] = true
+			for key, _ := range keyMap {
+				//valid that the key is still the same in the current transaction
+				realVal := t.Get(key)
+				if realVal !=nil && *t.Get(key) == targetVal {
+					acc[key] = true
+				}
 			}
 		}
 	})

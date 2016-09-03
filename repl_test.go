@@ -33,5 +33,13 @@ var _ = Describe("repl", func() {
 			Expect(out).To(Equal("BEGIN\nSET a 30\nBEGIN\nSET a 40\nCOMMIT\nGET a\n> 40\nROLLBACK\n> NO TRANSACTION\nCOMMIT\n> NO TRANSACTION\nEND\n"))
 		})
 
+		It("case six", func() {
+			outb := new(bytes.Buffer)
+			in := strings.NewReader("SET a 10\nBEGIN\nNUMEQUALTO 10\nBEGIN\nUNSET a\nNUMEQUALTO 10\nROLLBACK\nNUMEQUALTO 10\nCOMMIT\nEND\n")
+			Repl(in, outb)
+			out := outb.String()
+			Expect(out).To(Equal("SET a 10\nBEGIN\nNUMEQUALTO 10\n> 1\nBEGIN\nUNSET a\nNUMEQUALTO 10\n> 0\nROLLBACK\nNUMEQUALTO 10\n> 1\nCOMMIT\nEND\n"))
+		})
+
 	})
 })
