@@ -19,11 +19,26 @@ var _ = Describe("Transaction", func() {
 	Describe("Get", func() {
 		It("Return the value that is set", func() {
 			pTrans.Set("foo", "bar")
-			Expect(pTrans.Get("foo")).To(Equal("bar"))
+			Expect(*pTrans.Get("foo")).To(Equal("bar"))
 		})
 		It("Should return the value from the parent transaction if it is not in current transaction", func() {
 			pTrans.Set("foo", "bar")
-			Expect(cTrans.Get("foo")).To(Equal("bar"))
+			Expect(*cTrans.Get("foo")).To(Equal("bar"))
+		})
+
+		It("Should return nil if child transaction has been unset", func() {
+			pTrans.Set("foo", "bar")
+			cTrans.Unset("foo")
+			var nilS *string
+			Expect(cTrans.Get("foo")).To(Equal(nilS))
+		})
+	})
+	Describe("NumEqualTo", func() {
+		It("should count the correct number in a parentless transaction", func() {
+			v := "waldo"
+			pTrans.Set("where's", v)
+			pTrans.Set("here", v)
+			Expect(pTrans.NumEqualTo(v)).To(Equal(2))
 		})
 
 	})
