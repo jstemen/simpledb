@@ -2,14 +2,14 @@ package simple_db
 
 type Transaction struct {
 	StorMap  map[string]*string
-	InverMap map[string][]string
+	InverMap map[string]map[string]bool
 	Child    *Transaction
 	Parent   *Transaction
 }
 
 func NewTransaction() *Transaction {
 	t := new(Transaction)
-	t.InverMap = make(map[string][]string)
+	t.InverMap = make(map[string]map[string]bool)
 	t.StorMap = make(map[string]*string)
 	return t
 }
@@ -22,16 +22,25 @@ func (t *Transaction) New() (*Transaction) {
 }
 
 func (t *Transaction) Set(name string, val string) {
-	t.StorMap[name] = &val
-	slice, ok := t.InverMap[val]
+	//remove old reference in InverMap
+	oldVal, ok := t.StorMap[name]
 	if ok {
-		slice = append(slice, name)
-	}else {
-		slice = make([]string, 0)
-		slice = append(slice, name)
-		t.InverMap[val] = slice
+		keyMap, ok := t.InverMap[*oldVal]
+		if ok{
+			delete(keyMap,name)
+		}
 	}
-	t.InverMap[val] = slice
+
+	//store new
+	t.StorMap[name] = &val
+	keyMap, ok := t.InverMap[val]
+	if ok {
+		keyMap[name] = true
+	}else {
+		keyMap = make(map[string]bool)
+		keyMap[name] = true
+		t.InverMap[val] = keyMap
+	}
 }
 
 func (t *Transaction) Rollback() (parent *Transaction, res bool) {
@@ -85,10 +94,10 @@ func (t *Transaction) iterateUp(myfun func(*Transaction, *Transaction)) {
 func (t *Transaction) NumEqualTo(name string) (count int) {
 	acc := make(map[string]bool)
 	t.iterateUp(func(_, tran *Transaction) {
-		sli, ok := tran.InverMap[name]
+		keyMap, ok := tran.InverMap[name]
 		if ok {
-			for _, e := range sli {
-				acc[e] = true
+			for a, _ := range keyMap {
+				acc[a] = true
 			}
 		}
 	})
