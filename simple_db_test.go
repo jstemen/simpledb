@@ -40,6 +40,21 @@ var _ = Describe("Transaction", func() {
 			pTrans.Set("here", v)
 			Expect(pTrans.NumEqualTo(v)).To(Equal(2))
 		})
+		It("should sum the number of occurances in parent while ignoring duplicates", func() {
+			v := "waldo"
+			pTrans.Set("where's", v)
+			pTrans.Set("here", v)
+			cTrans.Set("here", v)
+			Expect(cTrans.NumEqualTo(v)).To(Equal(2))
+		})
+
+		It("should sum the number of occurances in parent", func() {
+			v := "waldo"
+			pTrans.Set("where's", v)
+			pTrans.Set("here", v)
+			cTrans.Set("there", v)
+			Expect(cTrans.NumEqualTo(v)).To(Equal(3))
+		})
 
 	})
 

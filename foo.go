@@ -28,11 +28,11 @@ func (t *Transaction) Set(name string, val string) {
 	if ok {
 		slice = append(slice, name)
 	}else {
-		slice = make([]string, 1)
+		slice = make([]string, 0)
 		slice = append(slice, name)
 		t.InverMap[val] = slice
 	}
-
+	t.InverMap[val] = slice
 }
 
 func (t *Transaction) Unset(name string) {
@@ -40,12 +40,23 @@ func (t *Transaction) Unset(name string) {
 }
 
 func (t *Transaction) NumEqualTo(name string) (count int) {
-	slice, ok := t.InverMap[name]
-	if ok {
-		count = len(slice)
-	}else {
-		count = 0
+	parent := t.Parent
+	tran := t
+	acc := make(map[string]bool)
+	for tran != nil {
+		sli, ok := tran.InverMap[name]
+		if ok {
+			for _, e := range sli {
+				acc[e] = true
+			}
+		}
+		tran = parent
+		if tran != nil {
+			parent = tran.Parent
+		}
 	}
+
+	count = len(acc)
 	return
 }
 
