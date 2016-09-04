@@ -33,6 +33,23 @@ var _ = Describe("repl", func() {
 			Expect(out).To(Equal("BEGIN\nSET a 30\nBEGIN\nSET a 40\nCOMMIT\nGET a\n> 40\nROLLBACK\n> NO TRANSACTION\nCOMMIT\n> NO TRANSACTION\nEND\n"))
 		})
 
+		It("case four", func() {
+			outb := new(bytes.Buffer)
+			in := strings.NewReader("BEGIN\nSET a 30\nBEGIN\nSET a 40\nCOMMIT\nGET a\nROLLBACK\nCOMMIT\nEND")
+			Repl(in, outb)
+			out := outb.String()
+			Expect(out).To(Equal("BEGIN\nSET a 30\nBEGIN\nSET a 40\nCOMMIT\nGET a\n> 40\nROLLBACK\n> NO TRANSACTION\nCOMMIT\n> NO TRANSACTION\nEND"))
+		})
+
+
+		It("case five", func() {
+			outb := new(bytes.Buffer)
+			in := strings.NewReader("SET a 50\nBEGIN\nGET a\nSET a 60\nBEGIN\nUNSET a\nGET a\nROLLBACK\nGET a\nCOMMIT\nGET a\n> 60END")
+			Repl(in, outb)
+			out := outb.String()
+			Expect(out).To(Equal("SET a 50\nBEGIN\nGET a\n> 50\nSET a 60\nBEGIN\nUNSET a\nGET a\n> NULL\nROLLBACK\nGET a\n> 60\nCOMMIT\nGET a\n> 60END"))
+		})
+
 		It("case six", func() {
 			outb := new(bytes.Buffer)
 			in := strings.NewReader("SET a 10\nBEGIN\nNUMEQUALTO 10\nBEGIN\nUNSET a\nNUMEQUALTO 10\nROLLBACK\nNUMEQUALTO 10\nCOMMIT\nEND\n")
