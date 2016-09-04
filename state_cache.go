@@ -1,7 +1,8 @@
 package simple_db
 
 /**
-Represents a running state of what the db should look like in a transaction.
+Represents a "running talley" state of what the db
+should look like in the most recent transaction.
 Can be rolled back using links to transactions.
  */
 
@@ -41,7 +42,8 @@ func (sc *StateCache) Set(key string, val string, trans *Transaction) {
 }
 
 /**
-Resets values that originate from transaction to previous state
+Resets values that originate from transaction to previous state.
+Expensive operation: O(N*T)
  */
 func (sc *StateCache) Rollback(trans *Transaction) {
 	parent := trans.parent
