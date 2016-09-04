@@ -2,7 +2,7 @@ package simple_db
 
 type BidirectionalMap struct {
 	keyToValue map[interface{}]interface{}
-	//Need fast way to retrieve keys to delete
+	//Need fast way to retrieve keys to delete, nested map allows fast lookups
 	valueToKeysMap map[interface{}]map[interface{}]bool
 }
 
@@ -19,6 +19,9 @@ func (bdm *BidirectionalMap) Set(key interface{}, value interface{}) {
 	keyMap, ok := bdm.valueToKeysMap[oldVal]
 	if ok {
 		delete(keyMap, key)
+		if len(keyMap) == 0{
+			delete(bdm.valueToKeysMap, oldVal)
+		}
 	}
 	bdm.keyToValue[key] = value
 
@@ -44,20 +47,3 @@ func (bdm *BidirectionalMap) Get(key interface{}) (value interface{}, ok bool) {
 	}
 }
 
-func (bdm *BidirectionalMap) Delete(key interface{}) {
-	value, ok := bdm.keyToValue[key]
-	if ok {
-		delete(bdm.valueToKeysMap, value)
-	}
-	delete(bdm.keyToValue, key)
-}
-
-func (bdm *BidirectionalMap) DeleteFromValue(val interface{}) {
-	keys, ok := bdm.valueToKeysMap[val]
-	if ok {
-		for ikey, _ := range keys {
-			delete(bdm.keyToValue, ikey)
-		}
-	}
-	delete(bdm.valueToKeysMap, val)
-}
