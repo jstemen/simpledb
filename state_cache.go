@@ -1,5 +1,10 @@
 package simple_db
 
+/**
+Represents a running state of what the db should look like in a transaction.
+Can be rolled back using links to transactions.
+ */
+
 type StateCache struct {
 	keyToVal   *BidirectionalMap
 	keyToTrans *BidirectionalMap
@@ -35,6 +40,9 @@ func (sc *StateCache) Set(key string, val string, trans *Transaction) {
 	sc.keyToTrans.Set(key, trans)
 }
 
+/**
+Resets values that originate from transaction to previous state
+ */
 func (sc *StateCache) Rollback(trans *Transaction) {
 	parent := trans.parent
 	keys, ok := sc.keyToTrans.GetKeysFromValue(trans)

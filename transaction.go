@@ -58,10 +58,10 @@ func (t *Transaction) Rollback() (parent *Transaction, ok bool) {
 
 /**
 Commits changes to parent transactions
-commitedTrans - The resulting transaction that hold the committed state
+committedTrans - The resulting transaction that hold the committed state
 ok - True if we are in a nested transaction / we actually had to do stuff
 */
-func (t *Transaction) Commit() (commitedTrans *Transaction, ok bool) {
+func (t *Transaction) Commit() (committedTrans *Transaction, ok bool) {
 	if t.parent == nil {
 		ok = false
 	} else {
@@ -73,7 +73,7 @@ func (t *Transaction) Commit() (commitedTrans *Transaction, ok bool) {
 				parent.Set(k.(string), v.(string))
 			}
 			parent.child = nil
-			commitedTrans = parent
+			committedTrans = parent
 		})
 		ok = true
 	}
@@ -117,7 +117,9 @@ Receives key value
 func (t *Transaction) Get(name string) string {
 	return t.stateCache.Get(name)
 }
-
+/**
+Finds value for key and transaction value was found in
+ */
 func (t *Transaction) get(name string) (string, *Transaction) {
 	v, ok := t.keyToVal.Get(name)
 	if ok || t.parent == nil {
