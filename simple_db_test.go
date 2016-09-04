@@ -19,17 +19,17 @@ var _ = Describe("Transaction", func() {
 	Describe("Get", func() {
 		It("Return the value that is set", func() {
 			pTrans.Set("foo", "bar")
-			Expect(*pTrans.Get("foo")).To(Equal("bar"))
+			Expect(pTrans.Get("foo")).To(Equal("bar"))
 		})
 		It("Should return the value from the parent transaction if it is not in current transaction", func() {
 			pTrans.Set("foo", "bar")
-			Expect(*cTrans.Get("foo")).To(Equal("bar"))
+			Expect(cTrans.Get("foo")).To(Equal("bar"))
 		})
 
 		It("Should return nil if child transaction has been unset", func() {
 			pTrans.Set("foo", "bar")
 			cTrans.Unset("foo")
-			Expect(cTrans.Get("foo")).To(BeNil())
+			Expect(cTrans.Get("foo")).To(Equal("NULL"))
 		})
 	})
 	Describe("NumEqualTo", func() {
@@ -69,7 +69,7 @@ var _ = Describe("Transaction", func() {
 			pTrans.Set("foo", "lake")
 			cTrans.Set("foo", "mountain")
 			cTrans.Commit()
-			Expect(*pTrans.Get("foo")).To(Equal("mountain"))
+			Expect(pTrans.Get("foo")).To(Equal("mountain"))
 		})
 
 		It("should return true when the transaction is nested", func() {

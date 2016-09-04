@@ -26,11 +26,7 @@ func Repl(in io.Reader, out io.Writer) (err error) {
 			s := trans.Get(splits[1])
 
 			fmt.Fprintf(out, "> ")
-			if s == nil {
-				fmt.Fprintln(out, "NULL")
-			}else {
-				fmt.Fprintln(out, *s)
-			}
+			fmt.Fprintln(out, s)
 		case "UNSET":
 			trans.Unset(splits[1])
 		case "NUMEQUALTO":

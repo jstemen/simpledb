@@ -1,17 +1,17 @@
 package simple_db
 
-import "fmt"
-
 type Transaction struct {
-	keyToVal *BidirectionalMap
-	child    *Transaction
-	parent   *Transaction
+	stateCache *StateCache
+	keyToVal   *BidirectionalMap
+	child      *Transaction
+	parent     *Transaction
 }
 /**
 Initializes a transaction
  */
 func NewTransaction() *Transaction {
 	t := new(Transaction)
+	t.stateCache = NewStateCache()
 	t.keyToVal = NewBidirectionalMap()
 	return t
 }
@@ -21,6 +21,7 @@ Spawns a child transaction
  */
 func (t *Transaction) New() (*Transaction) {
 	c := NewTransaction()
+	c.stateCache = t.stateCache
 	c.parent = t
 	t.child = c
 	return c
@@ -32,6 +33,11 @@ name - name key to set
 val - value of key to set
  */
 func (t *Transaction) Set(name string, val string) {
+	t.set(name, val)
+	t.stateCache.Set(name, val, t)
+}
+
+func (t *Transaction) set(name string, val string) {
 	t.keyToVal.Set(name, val)
 }
 
@@ -42,6 +48,7 @@ ok - true if we are in a transaction
  */
 func (t *Transaction) Rollback() (parent *Transaction, ok bool) {
 	if t.parent != nil {
+		t.stateCache.Rollback(t)
 		parent = t.parent
 		ok = true
 		parent.child = nil
@@ -79,7 +86,12 @@ Unsets value in transaction
 name - key that should be unset
  */
 func (t *Transaction) Unset(name string) {
-	t.keyToVal.Set(name, nil)
+	t.stateCache.Set(name, "NULL", t)
+	t.unset(name)
+}
+
+func (t *Transaction) unset(name string) {
+	t.keyToVal.Set(name, "NULL")
 }
 
 /**
@@ -101,39 +113,26 @@ func (t *Transaction) iterateUp(myfun func(*Transaction, *Transaction)) {
 Counts number of keys that are set to specified value in both immediate and accessor transactions
  */
 func (t *Transaction) NumEqualTo(targetVal string) (count int) {
-	acc := make(map[string]bool)
-	t.iterateUp(func(_, tran *Transaction) {
-		keyMap, ok := tran.keyToVal.GetKeysFromValue(targetVal)
-		fmt.Printf("Im looking up %#v\n", targetVal)
-		fmt.Printf("keytoval %#v\n\n", tran.keyToVal.valueToKeysMap)
-		if ok {
-			for key, _ := range keyMap {
-				keyStr := key.(string)
-				//valid that the key is still the same in the current transaction
-				realVal := t.Get(keyStr)
-				if realVal != nil && *t.Get(keyStr) == targetVal {
-					acc[keyStr] = true
-				}
-			}
-		}
-	})
-
-	count = len(acc)
-	return
+	return t.stateCache.NumEqualTo(targetVal)
 }
 /**
 Receives key value
  */
-func (t *Transaction) Get(name string) (*string) {
+func (t *Transaction) Get(name string) (string) {
+	return t.stateCache.Get(name)
+}
+
+func (t *Transaction) get(name string) (string, *Transaction) {
 	v, ok := t.keyToVal.Get(name)
 	if ok || t.parent == nil {
 		strPtr, ok := v.(string)
-		if ok{
-			return &strPtr
-		}else{
-			return nil
+		if ok {
+			return strPtr, t
+		}else {
+			return "REall NULL", nil
 		}
 	}else {
-		return t.parent.Get(name)
+		return t.parent.get(name)
 	}
+
 }
