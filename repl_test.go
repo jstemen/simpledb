@@ -1,10 +1,10 @@
 package simple_db
 
 import (
+	"bytes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"strings"
-	"bytes"
 )
 
 var _ = Describe("repl", func() {
@@ -40,7 +40,6 @@ var _ = Describe("repl", func() {
 			out := outb.String()
 			Expect(out).To(Equal("BEGIN\nSET a 30\nBEGIN\nSET a 40\nCOMMIT\nGET a\n> 40\nROLLBACK\n> NO TRANSACTION\nCOMMIT\n> NO TRANSACTION\nEND\n"))
 		})
-
 
 		It("case five", func() {
 			outb := new(bytes.Buffer)

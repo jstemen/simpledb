@@ -1,9 +1,9 @@
 package simple_db
 
 import (
-	"io"
 	"bufio"
 	"fmt"
+	"io"
 	"strings"
 )
 
@@ -36,14 +36,14 @@ func Repl(in io.Reader, out io.Writer) (err error) {
 			t, ok := trans.Commit()
 			if ok {
 				trans = t
-			}else {
+			} else {
 				fmt.Fprintln(out, "> NO TRANSACTION")
 			}
 		case "ROLLBACK":
 			t, ok := trans.Rollback()
 			if ok {
 				trans = t
-			}else {
+			} else {
 				fmt.Fprintln(out, "> NO TRANSACTION")
 			}
 		case "BEGIN":

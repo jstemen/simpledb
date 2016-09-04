@@ -1,14 +1,17 @@
 package simple_db
 
+const nullStr = "NULL"
+
 type Transaction struct {
 	stateCache *StateCache
 	keyToVal   *BidirectionalMap
 	child      *Transaction
 	parent     *Transaction
 }
+
 /**
 Initializes a transaction
- */
+*/
 func NewTransaction() *Transaction {
 	t := new(Transaction)
 	t.stateCache = NewStateCache()
@@ -18,8 +21,8 @@ func NewTransaction() *Transaction {
 
 /**
 Spawns a child transaction
- */
-func (t *Transaction) New() (*Transaction) {
+*/
+func (t *Transaction) New() *Transaction {
 	c := NewTransaction()
 	c.stateCache = t.stateCache
 	c.parent = t
@@ -31,21 +34,17 @@ func (t *Transaction) New() (*Transaction) {
 Sets value in transaction
 name - name key to set
 val - value of key to set
- */
+*/
 func (t *Transaction) Set(name string, val string) {
-	t.set(name, val)
-	t.stateCache.Set(name, val, t)
-}
-
-func (t *Transaction) set(name string, val string) {
 	t.keyToVal.Set(name, val)
+	t.stateCache.Set(name, val, t)
 }
 
 /**
 Discards one transaction, and returns parent transaction
 parent - parent transaction
 ok - true if we are in a transaction
- */
+*/
 func (t *Transaction) Rollback() (parent *Transaction, ok bool) {
 	if t.parent != nil {
 		t.stateCache.Rollback(t)
@@ -61,11 +60,11 @@ func (t *Transaction) Rollback() (parent *Transaction, ok bool) {
 Commits changes to parent transactions
 commitedTrans - The resulting transaction that hold the committed state
 ok - True if we are in a nested transaction / we actually had to do stuff
- */
+*/
 func (t *Transaction) Commit() (commitedTrans *Transaction, ok bool) {
 	if t.parent == nil {
 		ok = false
-	}else {
+	} else {
 		t.iterateUp(func(parent *Transaction, tran *Transaction) {
 			if parent == nil {
 				return
@@ -84,19 +83,15 @@ func (t *Transaction) Commit() (commitedTrans *Transaction, ok bool) {
 /**
 Unsets value in transaction
 name - key that should be unset
- */
+*/
 func (t *Transaction) Unset(name string) {
-	t.stateCache.Set(name, "NULL", t)
-	t.unset(name)
-}
-
-func (t *Transaction) unset(name string) {
-	t.keyToVal.Set(name, "NULL")
+	t.stateCache.Set(name, nullStr, t)
+	t.Set(name, nullStr)
 }
 
 /**
 Helper method that walks up the iteration tree
- */
+*/
 func (t *Transaction) iterateUp(myfun func(*Transaction, *Transaction)) {
 	parent := t.parent
 	tran := t
@@ -111,14 +106,15 @@ func (t *Transaction) iterateUp(myfun func(*Transaction, *Transaction)) {
 
 /**
 Counts number of keys that are set to specified value in both immediate and accessor transactions
- */
+*/
 func (t *Transaction) NumEqualTo(targetVal string) (count int) {
 	return t.stateCache.NumEqualTo(targetVal)
 }
+
 /**
 Receives key value
- */
-func (t *Transaction) Get(name string) (string) {
+*/
+func (t *Transaction) Get(name string) string {
 	return t.stateCache.Get(name)
 }
 
@@ -128,11 +124,10 @@ func (t *Transaction) get(name string) (string, *Transaction) {
 		strPtr, ok := v.(string)
 		if ok {
 			return strPtr, t
-		}else {
-			return "REall NULL", nil
+		} else {
+			return nullStr, nil
 		}
-	}else {
+	} else {
 		return t.parent.get(name)
 	}
-
 }

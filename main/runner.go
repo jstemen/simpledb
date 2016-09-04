@@ -1,17 +1,17 @@
 package main
 
 import (
-	"os"
 	"bufio"
-	"strings"
-	"github.com/jstemen/simple_db"
 	"fmt"
+	"github.com/jstemen/simple_db"
 	"io"
+	"os"
+	"strings"
 )
 
 func main() {
 	err := simple_db.Repl(os.Stdin, os.Stdout)
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 }
