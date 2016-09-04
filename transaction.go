@@ -65,12 +65,11 @@ func (t *Transaction) Commit() (committedTrans *Transaction, ok bool) {
 	if t.parent == nil {
 		ok = false
 	} else {
+		//Copy stateCache's view of the world
+		t.keyToVal = t.stateCache.keyToVal
 		t.iterateUp(func(parent *Transaction, tran *Transaction) {
 			if parent == nil {
 				return
-			}
-			for k, v := range tran.keyToVal.keyToValue {
-				parent.Set(k.(string), v.(string))
 			}
 			parent.child = nil
 			committedTrans = parent
